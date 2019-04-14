@@ -1,0 +1,67 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: web-server
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      containers:
+      - name: web-server
+        image: local_discourse/app
+        command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+        ports:
+        - containerPort: 80
+        env:
+        - name: DISCOURSE_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: secret
+              key: dbUsername
+        - name: DISCOURSE_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret
+              key: dbPassword
+        - name: DISCOURSE_DB_HOST
+          value: pgsql
+        - name: DISCOURSE_DB_NAME
+          value: discourse
+        - name: DISCOURSE_REDIS_HOST
+          value: redis
+        - name: DISCOURSE_DEVELOPER_EMAILS
+          value: hubertnang2017@gmail.com
+        - name: DISCOURSE_HOSTNAME
+          value: discuss.team
+        - name: DISCOURSE_SMTP_ADDRESS
+          value: smtp-relay.sendinblue.com
+        - name: DISCOURSE_SMTP_PORT
+          value: "587"
+        - name: DISCOURSE_SMTP_USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: secret
+              key: smtpUsername
+        - name: DISCOURSE_SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret
+              key: smtpPassword
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1
+            memory: 2Gi
+        imagePullPolicy: Never
+        volumeMounts:
+        - name: discourse-local-pv
+          mountPath: /mnt/disks/vol2
+      volumes:
+      - name: discourse-local-pv
+        persistentVolumeClaim:
+          claimName: discourse-local-pvc

@@ -1,0 +1,39 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pgsql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pgsql-server
+    spec:
+      containers:
+        - name: pgsql-server
+          image: bitnami/postgresql:latest
+          command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+          ports:
+          - containerPort: 5432
+          volumeMounts:
+            - name: pgsql-local-pv
+              mountPath: /bitnami
+          env:
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: dbUsername
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: dbPassword
+            - name: POSTGRESQL_DATABASE
+              value: discourse
+      volumes:
+      - name: pgsql-local-pv
+        persistentVolumeClaim:
+          claimName: pgsql-local-pvc
